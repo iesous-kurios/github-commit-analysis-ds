@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from decouple import config
 from flask import Flask
 from flask import request
 
@@ -7,7 +7,7 @@ import pandas as pd
 import os
 import requests
 
-SECRET = os.environ.get('SECRET')
+SECRET = config('SECRET')
 URL = 'https://api.github.com/graphql'
 DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
