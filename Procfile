@@ -1,0 +1,1 @@
+web: gunicorn twittoff:APP --timeout 1200
