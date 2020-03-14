@@ -21,26 +21,25 @@ def updateDB(data, conn):
     as well as a postgresSQL connection object and pushed all
     pull requests contained in data to the repository, assuming their
     ids don't already exist'''
-    data2 = data['data']['repository']['pullRequests']['nodes']
     curs = conn.cursor()
     for i in range(len(data2)):
         insert = ("INSERT INTO PullRequests VALUES (" +
                     "'" + str(variables['name']) +"'" +  ", " +
                     "'" + str(variables['owner']) +"'" +  ", " + 
-                    "'" + str(data2[i]['id']) +"'" +  ", " +
-                    "'" + str(data2[i]['state']) +"'" +  ", " + 
-                    "'" + str(data2[i]['createdAt']) + "'" + ", " +
-                    "'" + str(data2[i]['closedAt']) + "'" +  ", " +
-                    "'" + str(data2[i]['title'].replace("'","")) +"'" +  ", " + 
-                    "'" + str(data2[i]['bodyText'].replace("'","")) +"'" +  ", " +
-                    "'" + str(data2[i]['author']['login']) +"'" +  ", " + 
-                    "'" + str(data2[i]['participants']['totalCount']) +"'" +  ", " + 
-                    "'" + str(data2[i]['comments']['totalCount']) +"'" +  ", " + 
-                    "'" + str(data2[i]['reactions']['totalCount'])+"'" + ", " +
-                    "'" + str(data2[i]['commits']['totalCount']) +"'" +  ", " + 
-                    "'" + str(data2[i]['changedFiles']) +"'" +  ", " +
-                    "'" + str(data2[i]['additions']) +"'" +  ", " + 
-                    "'" + str(data2[i]['deletions']) + "'" +  ") ON CONFLICT (ID) DO NOTHING")
+                    "'" + str(data[i]['id']) +"'" +  ", " +
+                    "'" + str(data[i]['state']) +"'" +  ", " + 
+                    "'" + str(data[i]['createdAt']) + "'" + ", " +
+                    "'" + str(data[i]['closedAt']) + "'" +  ", " +
+                    "'" + str(data[i]['title'].replace("'","")) +"'" +  ", " + 
+                    "'" + str(data[i]['bodyText'].replace("'","")) +"'" +  ", " +
+                    "'" + str(data[i]['author']['login']) +"'" +  ", " + 
+                    "'" + str(data[i]['participants']['totalCount']) +"'" +  ", " + 
+                    "'" + str(data[i]['comments']['totalCount']) +"'" +  ", " + 
+                    "'" + str(data[i]['reactions']['totalCount'])+"'" + ", " +
+                    "'" + str(data[i]['commits']['totalCount']) +"'" +  ", " + 
+                    "'" + str(data[i]['changedFiles']) +"'" +  ", " +
+                    "'" + str(data[i]['additions']) +"'" +  ", " + 
+                    "'" + str(data[i]['deletions']) + "'" +  ") ON CONFLICT (ID) DO NOTHING")
         curs.execute(insert)
     
     conn.commit()
