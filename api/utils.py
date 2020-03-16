@@ -156,6 +156,34 @@ def add_or_update_repo(owner, name, app):
     yield '{} {} added!'.format(owner, name)
 
 
-def update_all_repos():
-    for repo in Repo.query.all():
-        add_or_update_repo(repo.owner, repo.name)
+def update_pull_requests(conn, owner, name):
+    '''Function takes in data returned from github apiv4
+    as well as a postgresSQL connection object and pushes all
+    pull requests contained in data to the repository, assuming their
+    ids don't already exist'''
+    variables = {'owner': owner, 'name': name}
+    response = run_query(initial_PR_query, variables)
+    data = response.json()['data']['repository']['pullRequests']['nodes']
+    curs = conn.cursor()
+    for i in range(len(data)):
+        insert = ("INSERT INTO PullRequests VALUES (" +
+                    "'" + str(variables['name']) +"'" +  ", " +
+                    "'" + str(variables['owner']) +"'" +  ", " + 
+                    "'" + str(data[i]['id']) +"'" +  ", " +
+                    "'" + str(data[i]['state']) +"'" +  ", " + 
+                    "'" + str(data[i]['createdAt']) + "'" + ", " +
+                    "'" + str(data[i]['closedAt']) + "'" +  ", " +
+                    "'" + str(data[i]['title'].replace("'","")) +"'" +  ", " + 
+                    "'" + str(data[i]['bodyText'].replace("'","")) +"'" +  ", " +
+                    "'" + str(data[i]['author']['login']) +"'" +  ", " + 
+                    "'" + str(data[i]['participants']['totalCount']) +"'" +  ", " + 
+                    "'" + str(data[i]['comments']['totalCount']) +"'" +  ", " + 
+                    "'" + str(data[i]['reactions']['totalCount'])+"'" + ", " +
+                    "'" + str(data[i]['commits']['totalCount']) +"'" +  ", " + 
+                    "'" + str(data[i]['changedFiles']) +"'" +  ", " +
+                    "'" + str(data[i]['additions']) +"'" +  ", " + 
+                    "'" + str(data[i]['deletions']) + "'" +  ") ON CONFLICT (ID) DO NOTHING")
+        curs.execute(insert)
+    
+    conn.commit()
+

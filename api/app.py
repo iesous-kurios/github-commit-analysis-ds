@@ -2,10 +2,12 @@ from datetime import datetime
 from decouple import config
 from flask import Flask
 from flask import request
-from .utils import pull_repo, summarize_PRs, run_query
+import psycopg2
 import pandas as pd
 import os
 import requests
+from dotenv import load_dotenv
+from .utils import pull_repo, summarize_PRs, run_query, update_pull_requests
 from .queries import repo_query, initial_PR_query, cont_PR_query
 
 load_dotenv(override=True)
@@ -36,15 +38,19 @@ def createApp():
         return 'Hello, World!'
 
     @app.route('/updatePRs/<owner>/<name>', methods=['GET'])
-    def updating(owner='scikit-learn', name='scitkit-learn', message='Enter an owner and repo name!'):
-        owner = owner or request.values['owner']
-        name = name or request.values['name']
+    def updating(owner=None, name=None, message='Enter an owner and repo name!'):
+        owner = owner or request.args.get('owner')
+        name = name or request.args.get('name')
         conn = psycopg2.connect(database=db, user=usern,
                                 password=passw, host=host,
                                 port=port)
+        time_to_close = """SELECT AVG(TO_TIMESTAMP(ClosedAt, 'YYYY-MM-DD HH24:MI:SS')-TO_TIMESTAMP(CreatedAt, 'YYYY-MM-DD HH24:MI:SS'))
+                        as diff FROM PullRequests"""
         update_pull_requests(conn,owner,name)
-        pr_close_time = conn.cursor.execute(time_to_close)
-        return pr_close_time
+        curs = conn.cursor()
+        curs.execute(time_to_close)
+        pr_close_time = curs.fetchall()
+        return f'The average time to close for a pull requests in {name} is {pr_close_time}'
 
 
     return app
