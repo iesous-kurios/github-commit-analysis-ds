@@ -1,4 +1,4 @@
 '''Create APP'''
-from .app import createApp
+from api.app import createApp
 
-APP = createApp()
+application = createApp()

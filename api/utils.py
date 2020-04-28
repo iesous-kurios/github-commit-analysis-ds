@@ -3,15 +3,17 @@ from datetime import datetime
 from decouple import config
 import pandas as pd
 import requests
-
-from .models import DB, Repo
-from .queries import repo_query, initial_PR_query, cont_PR_query
-#Her original formatting for calling to the api
+from nltk.stem import WordNetLemmatizer
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from api.models import DB, Repo
+from api.queries import repo_query, initial_PR_query, cont_PR_query
+#Set secret and url for graph api, set date and seconds per hour for later
 SECRET = config('SECRET')
 URL = 'https://api.github.com/graphql'
 DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 SECS_PER_HOUR = 3600
-
+#download vader lexicon
+nltk.download('vader_lexicon')
 #Querying the api for the user and repo requested
 def run_query(query, variables):
     r = requests.post(URL,
@@ -187,3 +189,36 @@ def update_pull_requests(conn, owner, name):
     
     conn.commit()
 
+lemm = WordNetLemmatizer()
+
+def lemmatize_text(text):
+    #Create list of lemmatized words, return original sentences
+    lemms = [lemm.lemmatize(w) for w in text.split()]
+    return " ".join(lemms)
+
+def sentiment(conn):
+    """Collect commit message text from database
+    run simple vader sentiment analysis and use
+    compound score to generate score for each message
+    then return the average sentiment score for a given repo"""
+
+    curs = conn.cursor()
+    text_query = """SELECT BodyText FROM PullRequests 
+                    WHERE BodyText IS NOT NULL"""
+    curs.execute(text_query)
+    #Collect messages, convert to strings then replace punct
+    text = pd.DataFrame(curs.fetchall(), columns=['text'])
+    text['text'] = text['text'].astype(str).str.replace("[^\w\s]","")
+    #Ensure none of the messages are empty
+    text = text[text["text"] != ""]
+    text['text'] = text['text'].str.lower()
+    text['text_lemmatized'] = text['text'].apply(lemmatize_text)
+    #Generate scores, create list of compound scores, then return average
+    sid = SentimentIntensityAnalyzer()
+    scores = []
+    for i in text["text_lemmatized"]:
+        score = sid.polarity_scores(i)
+        scores.append(score)
+    compounds = [x['compound'] for x in scores]
+    avg = sum(compounds)/len(compounds)
+    return avg
