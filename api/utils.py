@@ -2,7 +2,9 @@
 from datetime import datetime
 from decouple import config
 import pandas as pd
+import os
 import requests
+import nltk
 from nltk.stem import WordNetLemmatizer
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from api.models import DB, Repo
@@ -12,8 +14,6 @@ SECRET = config('SECRET')
 URL = 'https://api.github.com/graphql'
 DATE_FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 SECS_PER_HOUR = 3600
-#download vader lexicon
-nltk.download('vader_lexicon')
 #Querying the api for the user and repo requested
 def run_query(query, variables):
     r = requests.post(URL,
@@ -196,15 +196,15 @@ def lemmatize_text(text):
     lemms = [lemm.lemmatize(w) for w in text.split()]
     return " ".join(lemms)
 
-def sentiment(conn):
+def sentiment(conn, name):
     """Collect commit message text from database
     run simple vader sentiment analysis and use
     compound score to generate score for each message
     then return the average sentiment score for a given repo"""
 
     curs = conn.cursor()
-    text_query = """SELECT BodyText FROM PullRequests 
-                    WHERE BodyText IS NOT NULL"""
+    text_query = f"""SELECT BodyText FROM PullRequests 
+                    WHERE RepoName = '{name}'"""
     curs.execute(text_query)
     #Collect messages, convert to strings then replace punct
     text = pd.DataFrame(curs.fetchall(), columns=['text'])

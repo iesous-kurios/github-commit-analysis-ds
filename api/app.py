@@ -5,7 +5,7 @@ from psycopg2.extras import RealDictCursor
 import os
 import requests
 from dotenv import load_dotenv
-from .utils import update_pull_requests
+from api.utils import update_pull_requests, sentiment
 
 load_dotenv(override=True)
 host = os.getenv('RDS_HOSTNAME')
@@ -145,7 +145,8 @@ def createApp():
                  "AND reponame = '" + repo + "';")
         curs = conn.cursor()
         curs.execute(query)
-        return jsonify(curs.fetchall())
+        avg = {'average_sentiment':sentiment(conn, repo)}
+        return jsonify([curs.fetchall(), avg])
 
     @app.route('/updatePRs/<owner>/<repo>', methods=['GET'])
     def updating(owner, repo):
