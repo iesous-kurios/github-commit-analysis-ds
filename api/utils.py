@@ -220,5 +220,8 @@ def sentiment(conn, name):
         score = sid.polarity_scores(i)
         scores.append(score)
     compounds = [x['compound'] for x in scores]
-    avg = sum(compounds)/len(compounds)
-    return avg
+    if len(compounds) == 0:
+        return "You don't have any commit messages with body text!"
+    else:
+        avg = sum(compounds)/len(compounds)
+        return avg 
