@@ -225,3 +225,4 @@ def sentiment(conn, name):
     else:
         avg = sum(compounds)/len(compounds)
         return avg 
+
