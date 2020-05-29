@@ -6,8 +6,6 @@ import os
 import requests
 from dotenv import load_dotenv
 from api.utils import update_pull_requests, sentiment
-import plotly.express as px
-import pandas as pd
 
 load_dotenv(override=True)
 host = os.getenv('RDS_HOSTNAME')
@@ -157,35 +155,5 @@ def createApp():
                                 port=port,
                                 cursor_factory=RealDictCursor)
         return Response(update_pull_requests(conn, owner, repo))
-
-    @app.route('/test_issues', methods=['GET'])
-    def display_graph():
-        # api-endpoint 
-        URL = "https://api.github.com/repos/kubernetes/kubernetes/issues?page=1"
-        URL2 = "https://api.github.com/repos/kubernetes/kubernetes/issues?page=2"
-        URL3 = "https://api.github.com/repos/kubernetes/kubernetes/issues?page=3"
-  
-  
-        # sending get request and saving the response as response object 
-        r = requests.get(url = URL) 
-        r2 = requests.get(url = URL2)
-        r3 = requests.get(url = URL3)
-  
-        # extracting data in json format 
-        data1 = r.json() 
-        data2 = r2.json()
-        data3 = r3.json()  
-
-        issues1 = pd.DataFrame(data1)
-        issues2 = pd.DataFrame(data2)
-        issues3 = pd.DataFrame(data3)
-
-        issues = issues1.append(issues2)
-        issues = issues.append(issues3)
-        
-        fig = px.line(issues, x='created_at', y='comments')
-        
-        fig.show()
-
 
     return app
