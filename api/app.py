@@ -1,4 +1,5 @@
 from flask import Flask, Response
+import dash_core_components as dcc
 from flask import jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -184,8 +185,8 @@ def createApp():
         issues = issues.append(issues3)
         
         fig = px.line(issues, x='created_at', y='comments')
-        
         fig.show()
+        #dcc.Graph(id='evaluate-graph', figure=plotly_fig)
 
-
+    display_graph()
     return app
